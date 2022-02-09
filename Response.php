@@ -3,13 +3,15 @@
 namespace EasyRouter;
 
 class Response extends Request {
-    public function write($data) {
+    public function write($data): Response {
         if (is_array($data) || is_object($data)) {
             var_dump($data);
-            return;
+            return $this;
         }
 
         echo $data;
+
+        return $this;
     }
 
     public function withStatus(int $status): Response{
@@ -41,7 +43,7 @@ class Response extends Request {
         return $this;
     }
 
-    public function json($data): Response {
+    public function json(array $data): Response {
         header('Content-Type: application/json; charset=utf-8');
         print(json_encode($data));
 

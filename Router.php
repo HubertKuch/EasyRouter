@@ -5,34 +5,34 @@ namespace EasyRouter;
 class Router {
     private static array $stack = array();
 
-    public static function GET(string $endpoint, callable $callback) {
+    public static function GET(string $endpoint, callable $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("GET", $endpoint),
             "CALLBACK" => $callback
         );
     }
 
-    public static function POST(string $endpoint, callable $callback) {
+    public static function POST(string $endpoint, callable $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("POST", $endpoint),
             "CALLBACK" => $callback
         );
     }
 
-    public static function DELETE(string $endpoint, callable $callback) {
+    public static function DELETE(string $endpoint, callable $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("DELETE", $endpoint),
             "CALLBACK" => $callback
         );
     }
-    public static function PATCH(string $endpoint, callable $callback) {
+    public static function PATCH(string $endpoint, callable $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("PATCH", $endpoint),
             "CALLBACK" => $callback
         );
     }
 
-    public static function listen() {
+    public static function listen(): void {
         $actPath = trim(str_replace($_SERVER['SCRIPT_NAME'], "", $_SERVER['PHP_SELF']));
         $method = $_SERVER['REQUEST_METHOD'];
 

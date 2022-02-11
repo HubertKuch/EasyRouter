@@ -7,12 +7,22 @@ EasyRouter is small PHP framework to fast build API.
     use EasyRouter\Request; 
     use EasyRouter\Response;  
 ## Implemented HTTP methods
-  Easy router impelment four popular HTTP methods: GET, POST, PATCH, DELETE.
+  Easy router implement four popular HTTP methods: GET, POST, PATCH, DELETE.
   
 ## Syntax
     Router::<method>(<endpoint>, <callback>);
-    
+
     Router::listen();
+
+## Use method
+### Decoding JSON
+If you want decode json post body you can call this:
+
+    Router::use(Router::JSON());
+
+then your data will be in:
+
+    $request->body[]; 
 
 ## Example
     Router::GET('/api/v1/users', function(Request $req, Response $res){
@@ -58,6 +68,7 @@ Request doesn't have any methods.
 Router doesn't have any public attributes.
 
 ### Methods
+    use($setting): void
     GET(string $endpoint, callable $callback): void
     POST(string $endpoint, callable $callback): void
     DELETE(string $endpoint, callable $callback): void

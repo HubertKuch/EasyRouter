@@ -1,8 +1,8 @@
 <?php
 
-namespace EasyRouter;
+namespace hubertBlog;
 
-class Response extends Request {
+class Response {
     public function write($data): Response {
         if (is_array($data) || is_object($data)) {
             var_dump($data);
@@ -38,8 +38,6 @@ class Response extends Request {
             setcookie($key, $value);
         }
 
-        $this->cookies = $_COOKIE;
-
         return $this;
     }
 
@@ -52,8 +50,6 @@ class Response extends Request {
 
     public function setHeader(string $key, string $value): Response {
         header("$key: $value");
-        $this->headers = getallheaders();
-
         return $this;
     }
 }

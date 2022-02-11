@@ -1,9 +1,20 @@
 <?php
 
-namespace EasyRouter;
+namespace hubertBlog;
 
 class Router {
     private static array $stack = array();
+    private static array $settings = array(
+        "JSON" => false,
+    );
+
+    public static function use($setting): void {
+        self::$settings[$setting[0]] = $setting[1];
+    }
+
+    public static function JSON(): array {
+        return ["JSON", true];
+    }
 
     public static function GET(string $endpoint, callable $callback): void {
         self::$stack[] = array(
@@ -40,7 +51,6 @@ class Router {
             $actPath = explode("?", $actPath)[0]."/";
         }
 
-
         foreach (self::$stack as $route) {
             $params = array();
             $endpoint = $route['ROUTE']->getEndpoint();
@@ -61,9 +71,16 @@ class Router {
                 $explodedActualPath
                 ).($actPath[strlen($actPath)-1] !== '/' ?'/':'');
 
+
             if ($actPath === $endpoint && $method === $route['ROUTE']->getMethod()) {
                 $req = new Request($params);
                 $res = new Response();
+
+                if (self::$settings['JSON']) {
+                    $body = json_decode(file_get_contents('php://input'));
+                    if ($body)
+                        $req->body = (array)$body;
+                }
 
                 $route['CALLBACK']($req, $res);
 

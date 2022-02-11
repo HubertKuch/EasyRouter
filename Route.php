@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyRouter;
+namespace hubertBlog;
 
 class Route {
     private string $method;

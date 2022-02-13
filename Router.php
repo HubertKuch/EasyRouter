@@ -12,6 +12,26 @@ class Router {
         self::$settings[$setting[0]] = $setting[1];
     }
 
+    public static function middleware($middleware, callable $callback): void {
+        $isCanRun = true;
+
+        if (is_callable($middleware)) {
+            if (!call_user_func($middleware)) {
+                $isCanRun = false;
+            }
+        } else if (is_array($middleware)) {
+            foreach ($middleware as $mid) {
+                if(!call_user_func($mid)) {
+                    $isCanRun = false;
+                }
+            }
+        }
+
+        if ($isCanRun){
+            call_user_func($callback);
+        }
+    }
+
     public static function JSON(): array {
         return ["JSON", true];
     }

@@ -80,7 +80,8 @@ class Router {
 
             for ($i=0; $i<count($explodedEndpoint); $i++) {
                 if (@$explodedEndpoint[$i][0] === ':') {
-                    $params[$explodedEndpoint[$i]] = $explodedActualPath[$i];
+                    $ascIndex = substr($explodedEndpoint[$i], 1);
+                    $params[$ascIndex] = $explodedActualPath[$i];
                     $explodedActualPath[$i] = $explodedEndpoint[$i];
                 }
             }

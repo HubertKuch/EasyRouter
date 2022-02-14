@@ -28,7 +28,7 @@ class Router {
         }
 
         if ($isCanRun){
-            call_user_func($callback);
+            call_user_func($callback,  new Request(), new Response());
         }
     }
 
@@ -36,27 +36,27 @@ class Router {
         return ["JSON", true];
     }
 
-    public static function GET(string $endpoint, callable $callback): void {
+    public static function GET(string $endpoint, $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("GET", $endpoint),
             "CALLBACK" => $callback
         );
     }
 
-    public static function POST(string $endpoint, callable $callback): void {
+    public static function POST(string $endpoint, $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("POST", $endpoint),
             "CALLBACK" => $callback
         );
     }
 
-    public static function DELETE(string $endpoint, callable $callback): void {
+    public static function DELETE(string $endpoint, $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("DELETE", $endpoint),
             "CALLBACK" => $callback
         );
     }
-    public static function PATCH(string $endpoint, callable $callback): void {
+    public static function PATCH(string $endpoint, $callback): void {
         self::$stack[] = array(
             "ROUTE" => new Route("PATCH", $endpoint),
             "CALLBACK" => $callback
@@ -72,34 +72,28 @@ class Router {
         }
 
         foreach (self::$stack as $route) {
-            $params = array();
             $endpoint = $route['ROUTE']->getEndpoint();
+            $params = array();
+
             $explodedEndpoint = explode("/", $endpoint);
             $explodedActualPath = explode("/", $actPath);
 
-            if (strpos($endpoint, ':')) {
-                for ($i=0; $i < count($explodedEndpoint); $i++) {
-                    if (!empty($explodedActualPath[$i]) && @$explodedEndpoint[$i][0] == ":") {
-                        $params[substr($explodedEndpoint[$i], 1)] = $explodedActualPath[$i];
-                        $explodedActualPath[$i] = $explodedEndpoint[$i];
-                    }
+            for ($i=0; $i<count($explodedEndpoint); $i++) {
+                if (@$explodedEndpoint[$i][0] === ':') {
+                    $params[$explodedEndpoint[$i]] = $explodedActualPath[$i];
+                    $explodedActualPath[$i] = $explodedEndpoint[$i];
                 }
             }
 
-            $actPath = implode(
-                "/",
-                $explodedActualPath
-                ).($actPath[strlen($actPath)-1] !== '/' ?'/':'');
+            $actPathWithoutParamsValues = implode('/', $explodedActualPath);
 
-
-            if ($actPath === $endpoint && $method === $route['ROUTE']->getMethod()) {
+            if ($actPathWithoutParamsValues === $endpoint && $method === $route['ROUTE']->getMethod()) {
                 $req = new Request($params);
                 $res = new Response();
 
                 if (self::$settings['JSON']) {
                     $body = json_decode(file_get_contents('php://input'));
-                    if ($body)
-                        $req->body = (array)$body;
+                    if ($body) $req->body = (array)$body;
                 }
 
                 $route['CALLBACK']($req, $res);

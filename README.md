@@ -5,7 +5,15 @@ EasyRouter is small PHP framework to fast build API.
 
     use EasyRouter\Router;  
     use EasyRouter\Request; 
-    use EasyRouter\Response;  
+    use EasyRouter\Reponse;
+
+## Sample .htaccess file (required)
+    rewriteEngine on
+    RewriteCond %{SCRIPT_FILENAME} !-f
+    RewriteCond %{SCRIPT_FILENAME} !-d
+    RewriteCond %{SCRIPT_FILENAME} !-l
+    RewriteRule ^(.*)$ index.php/$1
+
 ## Implemented HTTP methods
   Easy router implement four popular HTTP methods: GET, POST, PATCH, DELETE.
   

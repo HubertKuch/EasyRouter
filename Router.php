@@ -1,6 +1,6 @@
 <?php
 
-namespace hubertBlog;
+namespace EasyRouter;
 
 class Router {
     private static array $stack = array();

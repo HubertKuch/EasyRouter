@@ -1,6 +1,6 @@
 <?php
 
-namespace hubertBlog;
+namespace EasyRouter;
 
 class Request {
     public array $body;

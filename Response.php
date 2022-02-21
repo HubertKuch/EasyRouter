@@ -1,6 +1,6 @@
 <?php
 
-namespace hubertBlog;
+namespace EasyRouter;
 
 class Response {
     public function write($data): Response {

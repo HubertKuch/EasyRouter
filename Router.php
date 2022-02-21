@@ -36,35 +36,39 @@ class Router {
         return ["JSON", true];
     }
 
-    public static function GET(string $endpoint, $callback): void {
+    private static function addEndpointToStack(string $method, string $endpoint, callable $callback){
+        if ($endpoint[0] === "/") $endpoint = substr($endpoint, 1);
+        if (strlen($endpoint > 0) && $endpoint[-1] === "/") $endpoint = substr($endpoint, 0, -1);
+        $endpoint = trim($endpoint);
+
         self::$stack[] = array(
-            "ROUTE" => new Route("GET", $endpoint),
+            "ROUTE" => new Route(strtoupper($method), $endpoint),
             "CALLBACK" => $callback
         );
+    }
+
+    public static function GET(string $endpoint, callable $callback): void {
+        self::addEndpointToStack("GET", $endpoint, $callback);
     }
 
     public static function POST(string $endpoint, $callback): void {
-        self::$stack[] = array(
-            "ROUTE" => new Route("POST", $endpoint),
-            "CALLBACK" => $callback
-        );
+        self::addEndpointToStack("POST", $endpoint, $callback);
     }
 
     public static function DELETE(string $endpoint, $callback): void {
-        self::$stack[] = array(
-            "ROUTE" => new Route("DELETE", $endpoint),
-            "CALLBACK" => $callback
-        );
+        self::addEndpointToStack("DELETE", $endpoint, $callback);
+
     }
     public static function PATCH(string $endpoint, $callback): void {
-        self::$stack[] = array(
-            "ROUTE" => new Route("PATCH", $endpoint),
-            "CALLBACK" => $callback
-        );
+        self::addEndpointToStack("PATCH", $endpoint, $callback);
     }
 
     public static function listen(): void {
-        $actPath = trim(str_replace($_SERVER['SCRIPT_NAME'], "", $_SERVER['PHP_SELF']));
+        $actPath = str_replace($_SERVER['SCRIPT_NAME'], "", $_SERVER['PHP_SELF']);
+        $actPath = trim($actPath);
+        if ($actPath[0] === "/") $actPath = substr($actPath, 1);
+        if (strlen($actPath) > 0 && $actPath[-1] === "/") $actPath = substr($actPath, 0, -1);
+
         $method = $_SERVER['REQUEST_METHOD'];
 
         if (count($_GET) > 0) {
@@ -73,6 +77,7 @@ class Router {
 
         foreach (self::$stack as $route) {
             $endpoint = $route['ROUTE']->getEndpoint();
+
             $params = array();
 
             $explodedEndpoint = explode("/", $endpoint);

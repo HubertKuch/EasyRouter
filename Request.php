@@ -8,6 +8,7 @@ class Request {
     public array $cookies;
     public array $params;
     public array $headers;
+    public array $locals;
 
     public function __construct(array $params = array()) {
         $this->body = $_POST;

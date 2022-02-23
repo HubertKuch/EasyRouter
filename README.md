@@ -10,12 +10,12 @@ EasyRouter is small PHP framework to fast build API.
   Easy router implement four popular HTTP methods: GET, POST, PATCH, DELETE.
   
 ## Syntax
-    Router::<method>(<endpoint>, <callback>);
+    Router::<method>(<endpoint>, <middleware>, <callback>);
 
     Router::listen();
 
 ## Example
-    Router::GET('/api/v1/users', function(Request $req, Response $res){
+    Router::GET('/api/v1/users', [], function(Request $req, Response $res){
         try {
             $users = $userRepo->findAll();
             
@@ -60,11 +60,10 @@ Router doesn't have any public attributes.
 
 ### Methods
     use($setting): void
-    middleware($middleware, callable $callback): void
-    GET(string $endpoint, callable $callback): void
-    POST(string $endpoint, callable $callback): void
-    DELETE(string $endpoint, callable $callback): void
-    PATCH(string $endpoint, callable $callback): void
+    GET(string $endpoint, array $middleware, callable $callback): void
+    POST(string $endpoint, array $middleware, callable $callback): void
+    DELETE(string $endpoint, array $middleware, callable $callback): void
+    PATCH(string $endpoint, array $middleware, callable $callback): void
     listen(): void
     
 ## Listen usage
@@ -89,16 +88,52 @@ was not called.
 
 ### How works middleware in EasyRouter?
 #### Examples
-If first callback returns true second callback will be called
-otherwise not.
+When all middlewares from middleware return true then callback will be call.
 
-    Router::middleware(function(){ return true; }, function(){
-        Router::GET('/', function(Request $req, Response $res){});
-        Router::GET('/:id', function(Request $req, Response $res){});
+    function middleware(Request $req, Response $res) {
+        $token = $res->headers['Authorization'] ?? null;
+
+        if (!token) {
+            return;
+        }
+
+        return true;
+    }
+
+    Router::GET('/api/v1/users', ['middleware'], function (Request $req, Response $res){
+        // callback
     });
 
-When first and second returns true then callback function will be called.
+### Pass data from middleware to callback
+If you want pass data from middleware to callback you must you 'locals' attribute
+from request. In middleware pass data to locals and they will be accessible in callback request.
+#### Example
+    
+    function findUser(Request $req, Response $res) {
+        $id = $req->body['id'] ?? null;
+    
+        if (!$id) {
+            $res -> status(400) -> json(array(
+                "message" => "Id must be passed"
+            ));
+            return;
+        }
 
-    Router::middleware([first, secend], function(){
-        Router::GET('/', function(Request $req, Response $res){});
+        $user = findUser($id) ?? null;
+
+        if (!$user) {
+            $res -> status(400) -> json(array(
+                "message" => "Id must be passed"
+            ));
+            return;
+        }
+
+        $req->locals['user'] = $user;
+        return true;
+    }
+
+    Router::GET('/api/v1/user/', ['findUser'], function (Request $req, Reponse $res){
+        $res->status(200)->json(array(
+            "user" => $req->locals['user']
+        ));
     });

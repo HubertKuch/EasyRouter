@@ -6,6 +6,7 @@ class Router {
     private static array $routesStack = array();
     private static array $middlewareStack = array();
     private static array $settingsStack = array();
+    private static bool $isNext = true;
 
     public static function use(callable $setting): void {
         self::$settingsStack[] = $setting;
@@ -18,6 +19,10 @@ class Router {
 
             if ($parsedBody) $req->body = $parsedBody;
         };
+    }
+
+    public static function stopNext(): void {
+        self::$isNext = false;
     }
 
     private static function addEndpointToStack(string $method, string $endpoint, array $middleware, callable $callback){
@@ -113,7 +118,8 @@ class Router {
                 }
             }
 
-            if ($isMiddlewareThrowNext
+            if (self::$isNext
+                && $isMiddlewareThrowNext
                 && $actPathWithoutParamsValues === $endpoint
                 && $method === $route['ROUTE']->getMethod()) {
                 $route['CALLBACK']($req, $res);

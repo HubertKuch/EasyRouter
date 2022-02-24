@@ -3,18 +3,21 @@
 namespace EasyRouter;
 
 class Router {
-    private static array $stack = array();
+    private static array $routesStack = array();
     private static array $middlewareStack = array();
-    private static array $settings = array(
-        "JSON" => false,
-    );
+    private static array $settingsStack = array();
 
-    public static function use($setting): void {
-        self::$settings[$setting[0]] = $setting[1];
+    public static function use(callable $setting): void {
+        self::$settingsStack[] = $setting;
     }
 
-    public static function JSON(): array {
-        return ["JSON", true];
+    public static function useJSON(): void {
+        self::$settingsStack[] = function (Request $req, Response $res) {
+            $jsonBody = file_get_contents('php://input');
+            $parsedBody = (array) json_decode($jsonBody);
+
+            if ($parsedBody) $req->body = $parsedBody;
+        };
     }
 
     private static function addEndpointToStack(string $method, string $endpoint, array $middleware, callable $callback){
@@ -22,7 +25,7 @@ class Router {
         if (strlen($endpoint > 0) && $endpoint[-1] === "/") $endpoint = substr($endpoint, 0, -1);
         $endpoint = trim($endpoint);
 
-        self::$stack[] = array(
+        self::$routesStack[] = array(
             "ROUTE" => new Route(strtoupper($method), $endpoint),
             "CALLBACK" => $callback,
             "MIDDLEWARE" => $middleware
@@ -49,6 +52,13 @@ class Router {
         self::addEndpointToStack("PATCH", $endpoint, $middleware, $callback);
     }
 
+
+    private static function provideSettings(Request $req, Response $res): void {
+        foreach (self::$settingsStack as $callback) {
+            call_user_func($callback, $req, $res);
+        }
+    }
+
     public static function listen(): void {
         $actPath = str_replace($_SERVER['SCRIPT_NAME'], "", $_SERVER['PHP_SELF']);
         $actPath = trim($actPath);
@@ -62,7 +72,7 @@ class Router {
         }
 
         // LISTEN ROUTES
-        foreach (self::$stack as $route) {
+        foreach (self::$routesStack as $route) {
             $endpoint = $route['ROUTE']->getEndpoint();
             $middlewareStack = $route['MIDDLEWARE'];
             $params = array();
@@ -84,6 +94,8 @@ class Router {
             $req = new Request($params);
             $res = new Response();
 
+            self::provideSettings($req, $res);
+
             if (count($middlewareStack) > 0) {
                 foreach ($middlewareStack as $middleware) {
                     if (!is_callable($middleware) || !is_string($middleware)) {
@@ -101,12 +113,9 @@ class Router {
                 }
             }
 
-            if ($isMiddlewareThrowNext && $actPathWithoutParamsValues === $endpoint && $method === $route['ROUTE']->getMethod()) {
-                if (self::$settings['JSON']) {
-                    $body = json_decode(file_get_contents('php://input'));
-                    if ($body) $req->body = (array)$body;
-                }
-
+            if ($isMiddlewareThrowNext
+                && $actPathWithoutParamsValues === $endpoint
+                && $method === $route['ROUTE']->getMethod()) {
                 $route['CALLBACK']($req, $res);
 
                 break;

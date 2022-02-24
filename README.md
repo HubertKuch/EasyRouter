@@ -73,11 +73,29 @@ On the end of declaring API call listen() method on Router object and then route
 ### Decoding JSON
 If you want to decode json post body you can call this:
 
-    Router::use(Router::JSON());
+    Router::useJSON();
 
 then your data will be in:
 
     $request->body[]; 
+
+### Own middleware 
+If you want to use top abstract level middleware you can use 'use' static function. She accepts 
+two arguments: Request and Response.
+
+### Example
+This code send "Failed authorization" and status code 403 if "Authorization" header was not sent 
+and stop next routes.
+
+    Router::use(function(Request $req, Response $res) {
+        if (!isset($req->headers['Authorization'])) {
+            $res->json(array(
+                "message" => "Failed authorization"
+            )) -> withStatus(403);
+            
+            Router::stopNext();
+        }
+    });
 
 ## Middleware
 ### What is middleware?
